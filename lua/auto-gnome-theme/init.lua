@@ -24,16 +24,10 @@ local function apply(mode)
 	-- 1. Always set the background (vital for single-theme setups)
 	vim.o.background = mode
 
-	-- 2. Determine the colorscheme name
-	local scheme_name = get_target_scheme(mode)
-
-	-- 3. Apply the colorscheme if one is defined
-	if scheme_name then
-		-- pcall prevents crashes if the theme plugin isn't installed yet
-		local ok, err = pcall(vim.cmd.colorscheme, scheme_name)
-		if not ok then
-			vim.notify("Error loading theme: " .. scheme_name, vim.log.levels.ERROR)
-		end
+	if mode == "dark" and config.dark_theme then
+		vim.cmd("colorscheme " .. config.dark_theme)
+	elseif mode == "light" and config.light_theme then
+		vim.cmd("colorscheme " .. config.light_theme)
 	end
 end
 
@@ -44,10 +38,10 @@ local function on_event(_, data, _)
 	output = output:gsub("%s+", "")
 
 	vim.schedule(function()
-		if output:find("'prefer-dark'") then
-			apply("dark")
-		elseif output:find("'default'") or output:find("'prefer-light'") then
-			apply("light")
+		if string.find(output, "dark") then
+			vim.o.background = "dark"
+		else
+			vim.o.background = "light"
 		end
 	end)
 end
@@ -66,10 +60,14 @@ function M.setup(user_opts)
 	local initial_mode = "light" -- Default assumption
 	local current_sys = vim.fn.system("gsettings get org.gnome.desktop.interface color-scheme")
 
-	if current_sys and current_sys:find("prefer-dark") then
+	if current_sys and string.find(current_sys, "dark") then
 		initial_mode = "dark"
 	end
 
+	local theme_name = get_target_scheme(initial_mode)
+	if theme_name then
+		vim.cmd("colorscheme " .. theme_name)
+	end
 	apply(initial_mode)
 
 	-- 2. MONITOR: Start background job
