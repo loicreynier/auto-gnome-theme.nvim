@@ -1,0 +1,69 @@
+# 🌓 auto-gnome-theme.nvim
+
+A simple, zero-polling Neovim plugin to automatically switch your colorscheme and background based on the Gnome system's light/dark mode preference.
+
+It utilizes `gsettings monitor` to listen for system events, ensuring **instantaneous** and **resource-efficient** theme switching.
+
+---
+
+## ⚡ Prerequisites
+
+This plugin is specifically designed for:
+
+* **Linux** environment.
+* **Gnome** desktop environment (or any environment that exposes the theme setting via `gsettings`).
+
+## 📦 Installation
+
+Since this is a local plugin you created within your config structure (`lua/gnome-theme/init.lua`), you can load it using your plugin manager.
+
+### Using `lazy.nvim`
+
+Replace `/path/to/your/nvim/config` with the actual path to your Neovim configuration directory (e.g., `~/.config/nvim`).
+
+```lua
+{
+    "itsfernn/auto-gnome-theme.nvim"
+  -- Ensure your chosen themes are installed!
+  dependencies = { 
+    -- "folke/tokyonight.nvim", 
+    -- "rose-pine/neovim",
+  },
+  
+  -- Configuration runs after the plugin is loaded
+  config = function()
+    require("gnome-theme").setup({
+      -- See Configuration section below
+      dark_theme = "tokyonight",
+      light_theme = "rose-pine",
+    })
+  end,
+}
+````
+
+-----
+
+## ⚙️ Configuration
+
+The `setup()` function accepts a table with theme configuration.
+
+### 1\. Dual Theme Switching (Recommended)
+
+Specify different colorschemes for light and dark modes. This provides the most control.
+
+```lua
+require("gnome-theme").setup({
+  dark_theme = "tokyonight",   -- Applies only when system is in Dark Mode
+  light_theme = "catppuccin",  -- Applies only when system is in Light Mode
+})
+```
+
+### 2\. Single Theme Switching (Background Only)
+
+If you only set the generic `theme` option, the plugin will load that colorscheme regardless of the mode, but it will still switch the vital `vim.o.background` setting (allowing themes with native light/dark variants, like Rose Pine, to adapt).
+
+```lua
+require("gnome-theme").setup({
+  theme = "rose-pine", -- Applies Rose Pine for both modes
+})
+-- When the system is dark, vim.o.background is set to 'dark', and vice versa.
