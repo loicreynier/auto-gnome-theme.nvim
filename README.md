@@ -44,7 +44,7 @@ This plugin is specifically designed for:
 
 The `setup()` function accepts a table with theme configuration.
 
-### 2\. Single Theme Switching
+### 1\. Single Theme Switching
 Some themes like `rose-pine` already have both a light and dark theme. In this case the theme is only loaded on startup and only the `vim.o.background` is set dynamically.
 
 ```lua
@@ -54,7 +54,7 @@ require("auto-gnome-theme").setup({
 -- When the system is dark, vim.o.background is set to 'dark', and vice versa.
 ```
 
-### 1\. Dual Theme Switching
+### 2\. Dual Theme Switching
 
 You can also specify two entierly different colorschemes for light and dark modes. 
 
