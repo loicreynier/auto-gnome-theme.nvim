@@ -9,26 +9,21 @@ local config = {
 }
 
 -- Helper: Determine which colorscheme name to use
-local function get_target_scheme(mode)
-	if mode == "dark" and config.dark_theme then
-		return config.dark_theme
-	elseif mode == "light" and config.light_theme then
-		return config.light_theme
-	else
-		return config.theme
+local function get_theme(mode)
+	local theme = nil
+	if mode == "dark" then
+		theme = config.dark_theme
+	elseif mode == "light" then
+		theme = config.light_theme
 	end
+
+	return theme or config.theme or "default"
 end
 
--- Core Logic: Apply the changes
-local function apply(mode)
-	-- 1. Always set the background (vital for single-theme setups)
-	vim.o.background = mode
-
-	if mode == "dark" and config.dark_theme then
-		vim.cmd("colorscheme " .. config.dark_theme)
-	elseif mode == "light" and config.light_theme then
-		vim.cmd("colorscheme " .. config.light_theme)
-	end
+local function get_mode()
+	local result = vim.fn.system("gnome_system_theme")
+	local mode = result:gsub("%s+", "")
+	return mode
 end
 
 -- Job Handler: Process gsettings output
@@ -40,8 +35,14 @@ local function on_event(_, data, _)
 	vim.schedule(function()
 		if string.find(output, "dark") then
 			vim.o.background = "dark"
+			if config.dark_theme then
+				vim.cmd("colorscheme " .. config.dark_theme)
+			end
 		else
 			vim.o.background = "light"
+			if config.light_theme then
+				vim.cmd("colorscheme " .. config.light_theme)
+			end
 		end
 	end)
 end
@@ -56,19 +57,16 @@ function M.setup(user_opts)
 		return
 	end
 
+	if vim.fn.executable("gnome_system_theme") == 0 then
+		vim.notify("gnome-theme: gnome-system-theme not found. Auto-switching disabled.", vim.log.levels.WARN)
+		return
+	end
+
 	-- 1. INITIAL STATE: Get current setting synchronously
-	local initial_mode = "light" -- Default assumption
-	local current_sys = vim.fn.system("gsettings get org.gnome.desktop.interface color-scheme")
-
-	if current_sys and string.find(current_sys, "dark") then
-		initial_mode = "dark"
-	end
-
-	local theme_name = get_target_scheme(initial_mode)
-	if theme_name then
-		vim.cmd("colorscheme " .. theme_name)
-	end
-	apply(initial_mode)
+	local mode = get_mode()
+	local theme = get_theme(mode)
+	vim.cmd("colorscheme " .. theme)
+	vim.o.background = mode
 
 	-- 2. MONITOR: Start background job
 	if job_id then
