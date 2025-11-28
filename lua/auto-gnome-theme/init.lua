@@ -20,14 +20,11 @@ local function get_theme(mode)
 	return theme or config.theme or "default"
 end
 
--- Job Handler: Process gsettings output
-local function on_event(_, data, _)
-	local output = table.concat(data, "")
-	-- Clean whitespace
-	output = output:gsub("%s+", "")
 
+-- Job Handler: Process gsettings output
+local function on_event(_, data)
 	vim.schedule(function()
-		if string.find(output, "dark") then
+		if string.find(data, "dark") then
 			vim.o.background = "dark"
 			if config.dark_theme then
 				vim.cmd("colorscheme " .. config.dark_theme)
@@ -63,14 +60,12 @@ function M.setup(user_opts)
 	vim.o.background = mode
 
 	-- 2. MONITOR: Start background job
-	if job_id then
-		vim.fn.jobstop(job_id)
+	if M.sysObj then
+		M.sysObj:kill()
 	end
 
-	job_id = vim.fn.jobstart({ "gsettings", "monitor", "org.gnome.desktop.interface", "color-scheme" }, {
-		on_stdout = on_event,
-		on_stderr = function() end,
-		detach = true,
+	M.sysObj = vim.system({ "gsettings", "monitor", "org.gnome.desktop.interface", "color-scheme" }, {
+		stdout = on_event,
 	})
 end
 
