@@ -1,5 +1,4 @@
 local M = {}
-local job_id = nil
 
 -- Default configuration
 local config = {
